@@ -10,6 +10,7 @@ struct FilenameNode {
 struct FilenameNode* newFilenameNode(char* filename, struct FilenameNode* next, struct FilenameNode* prev);
 void deleteFilenameNode(struct FilenameNode* nodeptr);
 void deleteAllFilenameNodes(struct FilenameNode* startnode);
+void loadFilenames(int, char**);
 
 extern struct FilenameNode* selectedPicture;
 
