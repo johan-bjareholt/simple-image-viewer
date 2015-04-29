@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "filenamenode.h"
 
@@ -12,14 +13,21 @@ struct FilenameNode* selectedPicture;
 
 GtkWindow* window;
 
-static void open_image(const char* filename, gpointer user_data){
-    printf("Opening %s\n", filename);
+static bool open_image(struct FilenameNode* filenamenode, gpointer user_data){
     GtkImage* image = GTK_IMAGE(user_data);
-    gtk_image_set_from_file (image, filename);
+    gtk_image_set_from_file (image, filenamenode->filename);
 
     const GdkPixbuf *pb = gtk_image_get_pixbuf(image);
-    if (pb != NULL)
+    if (pb != NULL){
         gtk_window_resize(window, gdk_pixbuf_get_width(pb), gdk_pixbuf_get_height(pb));
+        printf("Opened %s\n", filenamenode->filename);
+        return true;
+    }
+    else {
+        printf("Couldn't open %s\n", filenamenode->filename);
+        deleteFilenameNode(filenamenode);
+        return false;
+    }
 }
 
 static void open_next_image(GtkWidget *widget, GdkEventKey *event, gpointer user_data){
@@ -28,13 +36,15 @@ static void open_next_image(GtkWidget *widget, GdkEventKey *event, gpointer user
         case GDK_KEY_j:
         case GDK_KEY_Right:
             selectedPicture = selectedPicture->next;
-            open_image(selectedPicture->filename, user_data);
+            while( !open_image(selectedPicture, user_data))
+                selectedPicture = selectedPicture->next;
             break;
         case GDK_KEY_a:
         case GDK_KEY_k:
         case GDK_KEY_Left:
             selectedPicture = selectedPicture->prev;
-            open_image(selectedPicture->filename, user_data);
+            while( !open_image(selectedPicture, user_data) )
+                selectedPicture = selectedPicture->prev;
             break;
         default:
             break;
@@ -53,7 +63,7 @@ static void create_window ()
 	box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
 
     image = (GtkImage*)gtk_image_new();
-    open_image(selectedPicture->filename, image);
+    open_image(selectedPicture, image);
 
 	gtk_box_pack_start (GTK_BOX (box), (GtkWidget*)image, TRUE, TRUE, 0);
     gtk_container_add (GTK_CONTAINER (window), box);
